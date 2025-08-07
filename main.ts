@@ -8,6 +8,27 @@ import { createAuthRouter } from "./auth_api.ts";
 const db: DatabaseSync = new DatabaseSync("birthday_book.db");
 
 const app: Application = new Application();
+
+// CORS middleware
+app.use(async (ctx, next) => {
+  ctx.response.headers.set('Access-Control-Allow-Origin', '*');
+  ctx.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  await next();
+});
+
+// Serve static files from public directory
+app.use(async (ctx, next) => {
+  try {
+    await ctx.send({
+      root: `${Deno.cwd()}/public`,
+      index: "index.html",
+    });
+  } catch {
+    await next();
+  }
+});
+
 app.use(createAccountRouter(db).routes());
 app.use(createAccountRouter(db).allowedMethods());
 app.use(createBirthdayRouter(db).routes());

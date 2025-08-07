@@ -8,7 +8,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS account (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
+    name TEXT,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
     updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
   );

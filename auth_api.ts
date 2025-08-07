@@ -25,8 +25,18 @@ export function createAuthRouter(db: DatabaseSync): Router {
   router.post("/auth/request", async (ctx: RouterContext<"/auth/request">) => {
     const { email } = await ctx.request.body({ type: "json" }).value as { email: string };
     if (!email) return jsonError(ctx, 400, "Missing email");
-    const account = db.prepare("SELECT * FROM account WHERE email = ?").get(email);
-    if (!account) return jsonError(ctx, 404, "Account not found");
+    
+    // Check if account exists, create if it doesn't
+    let account = db.prepare("SELECT * FROM account WHERE email = ?").get(email);
+    if (!account) {
+      const accountId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      db.prepare(
+        "INSERT INTO account (id, email, createdAt, updatedAt) VALUES (?, ?, ?, ?)"
+      ).run(accountId, email, now, now);
+      account = db.prepare("SELECT * FROM account WHERE email = ?").get(email);
+    }
+    
     const code = generateCode();
     const id = crypto.randomUUID();
     const now = new Date();
