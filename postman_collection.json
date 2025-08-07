@@ -1,0 +1,111 @@
+{
+  "info": {
+    "_postman_id": "bday-book-api-collection",
+    "name": "Birthday Book API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Request Login Code",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice@example.com\"\n}" },
+        "url": { "raw": "http://localhost:8000/auth/request", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["auth", "request"] }
+      }
+    },
+    {
+      "name": "Verify Login Code",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice@example.com\",\n  \"code\": \"123456\"\n}" },
+        "url": { "raw": "http://localhost:8000/auth/verify", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["auth", "verify"] }
+      }
+    },
+    {
+      "name": "Get My Account (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": { "raw": "http://localhost:8000/accounts", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts"] }
+      }
+    },
+    {
+      "name": "Create My Account (Protected)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice@example.com\",\n  \"name\": \"Alice\"\n}" },
+        "url": { "raw": "http://localhost:8000/accounts", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts"] }
+      }
+    },
+    {
+      "name": "Get Account By ID (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": { "raw": "http://localhost:8000/accounts/:id", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts", ":id"] }
+      }
+    },
+    {
+      "name": "Update Account (Protected)",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice2@example.com\",\n  \"name\": \"Alice Updated\"\n}" },
+        "url": { "raw": "http://localhost:8000/accounts/:id", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts", ":id"] }
+      }
+    },
+    {
+      "name": "Delete Account (Protected)",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": { "raw": "http://localhost:8000/accounts/:id", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts", ":id"] }
+      }
+    },
+    {
+      "name": "Get Birthdays for My Account (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": { "raw": "http://localhost:8000/accounts/:accountId/birthdays", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts", ":accountId", "birthdays"] }
+      }
+    },
+    {
+      "name": "Create Birthday for My Account (Protected)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Bob\",\n  \"day\": 15,\n  \"month\": 7,\n  \"year\": 1990\n}" },
+        "url": { "raw": "http://localhost:8000/accounts/:accountId/birthdays", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["accounts", ":accountId", "birthdays"] }
+      }
+    },
+    {
+      "name": "Get Birthday By ID (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": { "raw": "http://localhost:8000/birthdays/:id", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["birthdays", ":id"] }
+      }
+    },
+    {
+      "name": "Update Birthday (Protected)",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Bob Updated\",\n  \"day\": 16,\n  \"month\": 8,\n  \"year\": 1991\n}" },
+        "url": { "raw": "http://localhost:8000/birthdays/:id", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["birthdays", ":id"] }
+      }
+    },
+    {
+      "name": "Delete Birthday (Protected)",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwt}}" } ],
+        "url": { "raw": "http://localhost:8000/birthdays/:id", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["birthdays", ":id"] }
+      }
+    }
+  ]
+} 
