@@ -83,6 +83,27 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 ALLOWED_ORIGINS=http://localhost:8000,https://staging.yourdomain.com,https://yourdomain.com
 ```
 
+## Quick Setup
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd birthday-book
+
+# 2. Copy environment file
+cp .env.example .env
+# Edit .env with your settings
+
+# 3. Initialize database
+deno run --allow-read --allow-write db_init.ts
+
+# 4. Start the application
+deno run --allow-net --allow-read --allow-write --allow-env main.ts
+
+# 5. Open in browser
+open http://localhost:8000
+```
+
 ## Running the Application
 
 ### Development
@@ -116,9 +137,46 @@ deno run --allow-net --allow-read --allow-write --allow-env main.ts
 
 ## Database
 
-Initialize the database:
+The application uses SQLite for data storage. The database file is not included in the repository and must be initialized before first use.
+
+### Initialize Database
+
 ```bash
+# Initialize the database (creates birthday_book.db)
 deno run --allow-read --allow-write db_init.ts
+```
+
+### Database Location
+
+The database file location can be configured using the `DATABASE_PATH` environment variable:
+
+```bash
+# Default location
+DATABASE_PATH=birthday_book.db
+
+# Custom location
+DATABASE_PATH=./data/birthday_book.db
+
+# Production location
+DATABASE_PATH=/var/lib/birthday_book/database.db
+```
+
+### Database Schema
+
+The application creates the following tables:
+- `account` - User accounts and authentication
+- `birthday` - Birthday entries
+- `login_code` - Email verification codes
+- `sharing_link` - Sharing links for birthday collection
+
+### Backup Database
+
+```bash
+# Create a backup
+cp birthday_book.db birthday_book_backup_$(date +%Y%m%d).db
+
+# Restore from backup
+cp birthday_book_backup_YYYYMMDD.db birthday_book.db
 ```
 
 ## API Endpoints
