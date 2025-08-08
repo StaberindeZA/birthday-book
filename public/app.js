@@ -1,5 +1,5 @@
 // API endpoints
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.origin;
 const REQUEST_CODE_URL = `${API_BASE}/auth/request`;
 const VERIFY_CODE_URL = `${API_BASE}/auth/verify`;
 

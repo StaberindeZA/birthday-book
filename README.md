@@ -68,6 +68,21 @@ DATABASE_PATH=./data/birthday_book.db
 DATABASE_PATH=/var/lib/birthday_book/database.db
 ```
 
+### `ALLOWED_ORIGINS`
+Configures CORS allowed origins. Comma-separated list of domains. Defaults to `http://localhost:8000`.
+
+**Examples:**
+```bash
+# Development
+ALLOWED_ORIGINS=http://localhost:8000
+
+# Production
+ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Multiple environments
+ALLOWED_ORIGINS=http://localhost:8000,https://staging.yourdomain.com,https://yourdomain.com
+```
+
 ## Running the Application
 
 ### Development

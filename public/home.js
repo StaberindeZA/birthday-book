@@ -1,5 +1,5 @@
 // API endpoints
-const API_BASE = 'http://localhost:8000';
+const API_BASE = window.location.origin;
 const BIRTHDAYS_URL = `${API_BASE}/birthdays`;
 
 // Global variable to store all birthdays

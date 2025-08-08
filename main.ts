@@ -17,9 +17,17 @@ const app: Application = new Application();
 
 // CORS middleware
 app.use(async (ctx, next) => {
-  ctx.response.headers.set('Access-Control-Allow-Origin', '*');
+  const allowedOrigins = Deno.env.get("ALLOWED_ORIGINS")?.split(",") || ["http://localhost:8000"];
+  const origin = ctx.request.headers.get("origin");
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    ctx.response.headers.set('Access-Control-Allow-Origin', origin);
+  }
+  
   ctx.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  ctx.response.headers.set('Access-Control-Allow-Credentials', 'true');
+  
   await next();
 });
 
