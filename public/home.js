@@ -5,6 +5,9 @@ const BIRTHDAYS_URL = `${API_BASE}/birthdays`;
 // Global variable to store all birthdays
 let allBirthdays = [];
 
+// Global variable to store sharing links
+let sharingLinks = [];
+
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('authToken');
@@ -18,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load existing birthdays
     loadBirthdays();
+    
+    // Load existing sharing links
+    loadSharingLinks();
 });
 
 function initializeForm() {
@@ -85,7 +91,7 @@ async function handleBirthdaySubmit(event) {
         loadBirthdays(); // Refresh the list
         
     } catch (error) {
-        showFormError(error.message);
+        showSharingError(error.message);
     }
 }
 
@@ -241,6 +247,151 @@ function showFormSuccess(message) {
     const successDiv = document.getElementById('formSuccess');
     successDiv.textContent = message;
     errorDiv.textContent = '';
+}
+
+function showSharingError(message) {
+    const errorDiv = document.getElementById('sharingError');
+    const successDiv = document.getElementById('sharingSuccess');
+    errorDiv.textContent = message;
+    successDiv.textContent = '';
+}
+
+function showSharingSuccess(message) {
+    const errorDiv = document.getElementById('sharingError');
+    const successDiv = document.getElementById('sharingSuccess');
+    successDiv.textContent = message;
+    errorDiv.textContent = '';
+}
+
+// Sharing functionality
+async function generateSharingLink() {
+    const button = document.getElementById('generateLinkBtn');
+    button.disabled = true;
+    button.textContent = 'Generating...';
+    
+    try {
+        const response = await fetch(`${API_BASE}/sharing/links`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to generate sharing link');
+        }
+        
+        const linkData = await response.json();
+        // Add the new link to the beginning of the array
+        sharingLinks.unshift(linkData);
+        displaySharingLinks();
+        showSharingSuccess('Sharing link generated successfully!');
+        
+    } catch (error) {
+        showSharingError(error.message);
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Generate Sharing Link';
+    }
+}
+
+async function loadSharingLinks() {
+    try {
+        const response = await fetch(`${API_BASE}/sharing/links`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load sharing links');
+        }
+        
+        sharingLinks = await response.json();
+        displaySharingLinks();
+        
+    } catch (error) {
+        console.error('Error loading sharing links:', error);
+        document.getElementById('sharingLinks').innerHTML = '<p>Error loading sharing links</p>';
+    }
+}
+
+function displaySharingLinks() {
+    const container = document.getElementById('sharingLinks');
+    
+    if (sharingLinks.length === 0) {
+        container.innerHTML = '<p>No sharing links generated yet.</p>';
+        return;
+    }
+    
+    const html = sharingLinks.map(link => {
+        const createdAt = new Date(link.createdAt).toLocaleDateString();
+        const expiresAt = link.expiresAt ? new Date(link.expiresAt).toLocaleDateString() : 'Never';
+        const isExpired = link.expiresAt && new Date(link.expiresAt) < new Date();
+        
+        return `
+            <div class="sharing-link-item ${isExpired ? 'expired' : ''}">
+                <div class="sharing-link-info">
+                    <div class="sharing-link-url">${link.shareUrl}</div>
+                    <div class="sharing-link-date">
+                        Created: ${createdAt} | Expires: ${expiresAt}
+                        ${isExpired ? ' (Expired)' : ''}
+                    </div>
+                </div>
+                <div class="sharing-link-actions">
+                    <button class="copy-btn" onclick="copyToClipboard('${link.shareUrl}')">Copy</button>
+                    <button class="delete-btn" onclick="deleteSharingLink('${link.id}')">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = html;
+}
+
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        showSharingSuccess('Link copied to clipboard!');
+    } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showSharingSuccess('Link copied to clipboard!');
+    }
+}
+
+async function deleteSharingLink(id) {
+    if (!confirm('Are you sure you want to delete this sharing link?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/sharing/links/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete sharing link');
+        }
+        
+        // Remove the link from the local array immediately
+        sharingLinks = sharingLinks.filter(link => link.id !== id);
+        displaySharingLinks();
+        
+        showSharingSuccess('Sharing link deleted successfully!');
+        
+    } catch (error) {
+        showSharingError(error.message);
+    }
 }
 
 function logout() {

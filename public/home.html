@@ -122,6 +122,105 @@
                 min-width: 0;
             }
         }
+        
+        .sharing-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+        }
+        .sharing-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .sharing-section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .generate-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .generate-btn:hover {
+            background: #218838;
+        }
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .sharing-links {
+            margin-top: 20px;
+        }
+        .sharing-link-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sharing-link-info {
+            flex-grow: 1;
+        }
+        .sharing-link-url {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        .sharing-link-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .copy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .sharing-link-date {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .sharing-link-item.expired {
+            opacity: 0.6;
+            background: #f8f9fa;
+        }
+        .sharing-link-item.expired .sharing-link-url {
+            color: #666;
+        }
         .birthday-item {
             background: white;
             padding: 15px;
@@ -199,6 +298,19 @@
         </form>
         <div id="formError" class="error"></div>
         <div id="formSuccess" class="success"></div>
+    </div>
+
+    <div class="sharing-section">
+        <h2>Share Your Birthday Book</h2>
+        <p>Generate a unique link to share with friends so they can add their birthdays to your list.</p>
+        <button id="generateLinkBtn" onclick="generateSharingLink()" class="generate-btn">Generate Sharing Link</button>
+        
+        <div id="sharingError" class="error"></div>
+        <div id="sharingSuccess" class="success"></div>
+        
+        <div id="sharingLinks" class="sharing-links">
+            <!-- Sharing links will be loaded here -->
+        </div>
     </div>
 
     <div class="birthdays-list">

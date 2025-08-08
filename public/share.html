@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Your Birthday - Birthday Book</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        .expired {
+            text-align: center;
+            color: #dc3545;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Add Your Birthday</h1>
+            <p id="invitationText">You've been invited to add your birthday to someone's birthday book!</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>Loading...</p>
+        </div>
+
+        <div id="expired" class="expired" style="display: none;">
+            <h2>Link Expired</h2>
+            <p>This sharing link has expired or is no longer valid.</p>
+        </div>
+
+        <form id="birthdayForm" style="display: none;">
+            <div class="form-group">
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" required placeholder="Enter your full name">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="day">Day:</label>
+                    <select id="day" required>
+                        <option value="">Select Day</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="month">Month:</label>
+                    <select id="month" required>
+                        <option value="">Select Month</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year (Optional):</label>
+                    <input type="number" id="year" min="1900" max="2100" placeholder="YYYY">
+                </div>
+            </div>
+            <button type="submit">Add My Birthday</button>
+        </form>
+
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let shareToken = '';
+
+        // Get token from URL
+        function getTokenFromUrl() {
+            const pathParts = window.location.pathname.split('/');
+            return pathParts[pathParts.length - 1];
+        }
+
+        // Initialize the form
+        function initializeForm() {
+            // Populate day dropdown (1-31)
+            const daySelect = document.getElementById('day');
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                daySelect.appendChild(option);
+            }
+            
+            // Populate month dropdown
+            const monthSelect = document.getElementById('month');
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index + 1;
+                option.textContent = month;
+                monthSelect.appendChild(option);
+            });
+        }
+
+        // Load sharing link details
+        async function loadSharingLink() {
+            try {
+                const response = await fetch(`${API_BASE}/sharing/links/${shareToken}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showExpired();
+                    } else {
+                        throw new Error('Failed to load sharing link');
+                    }
+                    return;
+                }
+                
+                const linkData = await response.json();
+                document.getElementById('invitationText').textContent = 
+                    `You've been invited to add your birthday to ${linkData.accountName}'s birthday book!`;
+                
+                // Show the form
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('birthdayForm').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading sharing link:', error);
+                showExpired();
+            }
+        }
+
+        function showExpired() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('expired').style.display = 'block';
+        }
+
+        // Handle form submission
+        async function handleBirthdaySubmit(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const day = parseInt(document.getElementById('day').value);
+            const month = parseInt(document.getElementById('month').value);
+            const year = document.getElementById('year').value ? parseInt(document.getElementById('year').value) : null;
+            
+            if (!name || !day || !month) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Adding...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/sharing/links/${shareToken}/birthdays`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        day,
+                        month,
+                        year
+                    })
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to add birthday');
+                }
+                
+                showSuccess('Birthday added successfully! Thank you for sharing your birthday!');
+                document.getElementById('birthdayForm').reset();
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Add My Birthday';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            errorDiv.textContent = message;
+            successDiv.textContent = '';
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            errorDiv.textContent = '';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            shareToken = getTokenFromUrl();
+            
+            if (!shareToken) {
+                showExpired();
+                return;
+            }
+            
+            initializeForm();
+            loadSharingLink();
+            
+            // Handle form submission
+            document.getElementById('birthdayForm').addEventListener('submit', handleBirthdaySubmit);
+        });
+    </script>
+</body>
+</html>
