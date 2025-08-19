@@ -135,6 +135,26 @@
         .checkbox-cell input[type="checkbox"] {
             transform: scale(1.2);
         }
+        .duplicate-row {
+            background-color: #fff3cd !important;
+            border-left: 4px solid #ffc107;
+        }
+        .duplicate-row:hover {
+            background-color: #ffeaa7 !important;
+        }
+        .duplicate-badge {
+            background: #ffc107;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .duplicate-info {
+            font-size: 12px;
+            color: #856404;
+            margin-top: 4px;
+        }
         .import-btn {
             padding: 12px 24px;
             background: #28a745;
@@ -204,13 +224,21 @@
             <h4>Expected CSV Format:</h4>
             <p>The CSV should have the following columns:</p>
             <code>"Name","Year","Month","Day","Link to Profile"</code>
-            <p><strong>Note:</strong> Year and Link to Profile are optional. Month should be a number (1-12).</p>
+            <p><strong>Note:</strong> Year and Link to Profile are optional. Month should be a number (1-12). Day should be a number (1-31).</p>
+            <p><strong>Note:</strong> To export birthdays from Facebook, the following Chrome extension 
+                can be used: 
+                <a href="https://chromewebstore.google.com/detail/imielmggcccenhgncmpjlehemlinhjjo?utm_source=item-share-cb">
+                    Birthday Calendar Exporter for Facebook
+                </a>
+                . This is not an endorsment of this extension, and proper care should be taken installing any extensions.
+            </p>
         </div>
     </div>
 
     <div class="preview-section" id="previewSection" style="display: none;">
         <h2>Preview & Select Entries</h2>
         <p class="info">Select the birthdays you want to import. You can use the checkbox in the header to select/deselect all.</p>
+        <p class="info"><strong>Duplicate Detection:</strong> Entries with matching name, month, and day are marked as duplicates and cannot be selected for import.</p>
         
         <div id="previewTableContainer"></div>
         

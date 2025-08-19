@@ -5,6 +5,7 @@ const BIRTHDAYS_URL = `${API_BASE}/birthdays`;
 // Global variables
 let csvData = [];
 let selectedRows = new Set();
+let existingBirthdays = [];
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
@@ -103,7 +104,8 @@ function parseCSV(csvText) {
         return;
     }
     
-    showPreview();
+    // Load existing birthdays and check for duplicates
+    loadExistingBirthdays();
 }
 
 function parseCSVLine(line) {
@@ -149,6 +151,7 @@ function showPreview() {
                     <th>Birthday</th>
                     <th>Year</th>
                     <th>Profile Link</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -160,15 +163,30 @@ function showPreview() {
         const yearText = entry.year ? entry.year : '';
         const profileLinkText = entry.profileLink ? 'Yes' : 'No';
         
+        // Determine row class and status
+        const rowClass = entry.isDuplicate ? 'duplicate-row' : '';
+        let statusHTML = '';
+        
+        if (entry.isDuplicate) {
+            const existing = entry.existingEntry;
+            statusHTML = `
+                <div class="duplicate-badge">Duplicate</div>
+                <div class="duplicate-info">Already exists</div>
+            `;
+        } else {
+            statusHTML = '<span style="color: #28a745;">New</span>';
+        }
+        
         tableHTML += `
-            <tr>
+            <tr class="${rowClass}">
                 <td class="checkbox-cell">
-                    <input type="checkbox" id="row-${index}" onchange="toggleRowSelection(${index})">
+                    <input type="checkbox" id="row-${index}" onchange="toggleRowSelection(${index})" ${entry.isDuplicate ? 'disabled' : ''}>
                 </td>
                 <td>${entry.name}</td>
                 <td>${birthdayText}</td>
                 <td>${yearText}</td>
                 <td>${profileLinkText}</td>
+                <td>${statusHTML}</td>
             </tr>
         `;
     });
@@ -185,19 +203,30 @@ function toggleSelectAll() {
     
     csvData.forEach((entry, index) => {
         const checkbox = document.getElementById(`row-${index}`);
-        checkbox.checked = isChecked;
-        
-        if (isChecked) {
-            selectedRows.add(index);
-        } else {
-            selectedRows.delete(index);
+        // Only check non-duplicate entries
+        if (!entry.isDuplicate) {
+            checkbox.checked = isChecked;
+            
+            if (isChecked) {
+                selectedRows.add(index);
+            } else {
+                selectedRows.delete(index);
+            }
         }
     });
     
     updateImportButton();
+    updateSelectAllCheckbox();
 }
 
 function toggleRowSelection(index) {
+    const entry = csvData[index];
+    
+    // Don't allow selection of duplicate entries
+    if (entry.isDuplicate) {
+        return;
+    }
+    
     const checkbox = document.getElementById(`row-${index}`);
     
     if (checkbox.checked) {
@@ -322,6 +351,42 @@ async function importSelected() {
     csvData.forEach((entry, index) => {
         const checkbox = document.getElementById(`row-${index}`);
         checkbox.checked = false;
+    });
+}
+
+async function loadExistingBirthdays() {
+    try {
+        const response = await fetch(BIRTHDAYS_URL, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load existing birthdays');
+        }
+        
+        existingBirthdays = await response.json();
+        checkForDuplicates();
+        showPreview();
+        
+    } catch (error) {
+        console.error('Error loading existing birthdays:', error);
+        showError('Failed to load existing birthdays. Please try again.');
+    }
+}
+
+function checkForDuplicates() {
+    csvData.forEach(entry => {
+        // Check for duplicates based on name, month, and day
+        const duplicate = existingBirthdays.find(existing => 
+            existing.name.toLowerCase() === entry.name.toLowerCase() &&
+            existing.month === entry.month &&
+            existing.day === entry.day
+        );
+        
+        entry.isDuplicate = !!duplicate;
+        entry.existingEntry = duplicate || null;
     });
 }
 
