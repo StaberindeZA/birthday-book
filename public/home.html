@@ -30,6 +30,20 @@
         .logout-btn:hover {
             background: #c82333;
         }
+        .import-link {
+            padding: 8px 16px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .import-link:hover {
+            background: #138496;
+        }
         .add-birthday-form {
             background: #f8f9fa;
             padding: 20px;
@@ -318,7 +332,10 @@
 <body>
     <div class="header">
         <h1>Birthday Book</h1>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+        <div>
+            <a href="import.html" class="import-link">Import CSV</a>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
     </div>
 
     <div class="add-birthday-form">
