@@ -195,13 +195,16 @@ function displayBirthdays(birthdays) {
                 : `in ${birthday.daysUntilNextBirthday} days`;
         
         return `
-            <div class="birthday-item">
+            <div class="birthday-item" id="birthday-${birthday.id}">
                 <div class="birthday-info">
                     <div class="birthday-name">${birthday.name}</div>
                     <div class="birthday-date">${monthName} ${birthday.day}${yearText}</div>
                     <div class="birthday-countdown">${daysText}</div>
                 </div>
-                <button class="delete-btn" onclick="deleteBirthday('${birthday.id}')">Delete</button>
+                <div class="birthday-actions">
+                    <button class="edit-btn" onclick="startEdit('${birthday.id}', '${birthday.name}', ${birthday.day}, ${birthday.month}, ${birthday.year || 'null'})">Edit</button>
+                    <button class="delete-btn" onclick="deleteBirthday('${birthday.id}')">Delete</button>
+                </div>
             </div>
         `;
     }).join('');
@@ -233,6 +236,125 @@ async function deleteBirthday(id) {
         console.error('Error deleting birthday:', error);
         alert('Failed to delete birthday. Please try again.');
     }
+}
+
+function startEdit(id, name, day, month, year) {
+    const birthdayItem = document.getElementById(`birthday-${id}`);
+    const birthdayInfo = birthdayItem.querySelector('.birthday-info');
+    const birthdayActions = birthdayItem.querySelector('.birthday-actions');
+    
+    // Create the edit form
+    const editForm = document.createElement('div');
+    editForm.className = 'edit-form';
+    editForm.innerHTML = `
+        <div class="form-group">
+            <label>Name:</label>
+            <input type="text" id="edit-name-${id}" value="${name}" required>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Day:</label>
+                <select id="edit-day-${id}" required>
+                    ${generateDayOptions(day)}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Month:</label>
+                <select id="edit-month-${id}" required>
+                    ${generateMonthOptions(month)}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Year (Optional):</label>
+                <input type="number" id="edit-year-${id}" min="1900" max="2100" value="${year !== 'null' ? year : ''}">
+            </div>
+        </div>
+        <div class="edit-form-buttons">
+            <button type="button" class="save-btn" onclick="saveEdit('${id}')">Save</button>
+            <button type="button" class="cancel-btn" onclick="cancelEdit('${id}')">Cancel</button>
+        </div>
+    `;
+    
+    // Hide the original content and show the edit form
+    birthdayInfo.style.display = 'none';
+    birthdayActions.style.display = 'none';
+    birthdayItem.appendChild(editForm);
+}
+
+function generateDayOptions(selectedDay) {
+    let options = '<option value="">Select Day</option>';
+    for (let i = 1; i <= 31; i++) {
+        const selected = i === selectedDay ? 'selected' : '';
+        options += `<option value="${i}" ${selected}>${i}</option>`;
+    }
+    return options;
+}
+
+function generateMonthOptions(selectedMonth) {
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    let options = '<option value="">Select Month</option>';
+    months.forEach((month, index) => {
+        const monthNumber = index + 1;
+        const selected = monthNumber === selectedMonth ? 'selected' : '';
+        options += `<option value="${monthNumber}" ${selected}>${month}</option>`;
+    });
+    return options;
+}
+
+async function saveEdit(id) {
+    const name = document.getElementById(`edit-name-${id}`).value.trim();
+    const day = parseInt(document.getElementById(`edit-day-${id}`).value);
+    const month = parseInt(document.getElementById(`edit-month-${id}`).value);
+    const year = document.getElementById(`edit-year-${id}`).value ? parseInt(document.getElementById(`edit-year-${id}`).value) : null;
+    
+    if (!name || !day || !month) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${BIRTHDAYS_URL}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({
+                name,
+                day,
+                month,
+                year
+            })
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update birthday');
+        }
+        
+        // Refresh the list to show updated data
+        loadBirthdays();
+        
+    } catch (error) {
+        console.error('Error updating birthday:', error);
+        alert('Failed to update birthday. Please try again.');
+    }
+}
+
+function cancelEdit(id) {
+    const birthdayItem = document.getElementById(`birthday-${id}`);
+    const birthdayInfo = birthdayItem.querySelector('.birthday-info');
+    const birthdayActions = birthdayItem.querySelector('.birthday-actions');
+    const editForm = birthdayItem.querySelector('.edit-form');
+    
+    // Show the original content and remove the edit form
+    birthdayInfo.style.display = 'block';
+    birthdayActions.style.display = 'flex';
+    editForm.remove();
 }
 
 function showFormError(message) {
