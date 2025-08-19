@@ -83,6 +83,38 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 ALLOWED_ORIGINS=http://localhost:8000,https://staging.yourdomain.com,https://yourdomain.com
 ```
 
+### Email Configuration
+The following variables configure email sending for OTP codes:
+
+#### `SMTP_HOST`
+SMTP server hostname (e.g., `smtp.gmail.com`, `smtp.sendgrid.net`)
+
+#### `SMTP_PORT`
+SMTP server port (default: `587` for TLS)
+
+#### `SMTP_USER`
+SMTP username/email address
+
+#### `SMTP_PASS`
+SMTP password or app-specific password
+
+**Examples:**
+```bash
+# Gmail
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# SendGrid
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_USER=apikey
+SMTP_PASS=your-sendgrid-api-key
+```
+
+**Note:** If email configuration is not provided, OTP codes will be logged to the console for development purposes.
+
 ## Quick Setup
 
 ```bash
@@ -93,6 +125,12 @@ cd birthday-book
 # 2. Copy environment file
 cp .env.example .env
 # Edit .env with your settings
+
+# Optional: Configure email for OTP delivery
+# Edit .env and add your SMTP settings:
+# SMTP_HOST=smtp.gmail.com
+# SMTP_USER=your-email@gmail.com
+# SMTP_PASS=your-app-password
 
 # 3. Initialize database
 deno run --allow-read --allow-write db_init.ts
