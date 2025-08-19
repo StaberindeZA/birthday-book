@@ -215,6 +215,11 @@ function toggleSelectAll() {
         }
     });
     
+    // When deselecting all, clear all selections regardless of duplicate status
+    if (!isChecked) {
+        selectedRows.clear();
+    }
+    
     updateImportButton();
     updateSelectAllCheckbox();
 }
@@ -241,13 +246,13 @@ function toggleRowSelection(index) {
 
 function updateSelectAllCheckbox() {
     const selectAllCheckbox = document.getElementById('selectAll');
-    const totalRows = csvData.length;
+    const totalSelectableRows = csvData.filter(entry => !entry.isDuplicate).length;
     const selectedCount = selectedRows.size;
     
     if (selectedCount === 0) {
         selectAllCheckbox.indeterminate = false;
         selectAllCheckbox.checked = false;
-    } else if (selectedCount === totalRows) {
+    } else if (selectedCount === totalSelectableRows) {
         selectAllCheckbox.indeterminate = false;
         selectAllCheckbox.checked = true;
     } else {
@@ -278,16 +283,36 @@ async function importSelected() {
     resultDiv.innerHTML = '';
     
     const selectedEntries = Array.from(selectedRows).map(index => csvData[index]);
+    
+    // Filter out entries that would become duplicates after import
+    const entriesToImport = [];
+    const duplicateEntries = [];
+    
+    for (const entry of selectedEntries) {
+        // Check if this entry would be a duplicate after import
+        const wouldBeDuplicate = existingBirthdays.some(existing => 
+            existing.name.toLowerCase() === entry.name.toLowerCase() &&
+            existing.month === entry.month &&
+            existing.day === entry.day
+        );
+        
+        if (wouldBeDuplicate) {
+            duplicateEntries.push(entry);
+        } else {
+            entriesToImport.push(entry);
+        }
+    }
+    
     let successCount = 0;
     let errorCount = 0;
     const errors = [];
     
-    for (let i = 0; i < selectedEntries.length; i++) {
-        const entry = selectedEntries[i];
-        const progress = ((i + 1) / selectedEntries.length) * 100;
+    for (let i = 0; i < entriesToImport.length; i++) {
+        const entry = entriesToImport[i];
+        const progress = ((i + 1) / entriesToImport.length) * 100;
         
         progressFill.style.width = progress + '%';
-        progressText.textContent = `Importing ${entry.name}... (${i + 1}/${selectedEntries.length})`;
+        progressText.textContent = `Importing ${entry.name}... (${i + 1}/${entriesToImport.length})`;
         
         try {
             const response = await fetch(BIRTHDAYS_URL, {
@@ -328,6 +353,9 @@ async function importSelected() {
     if (successCount > 0) {
         resultHTML += `<div class="success">Successfully imported ${successCount} birthday${successCount !== 1 ? 's' : ''}!</div>`;
     }
+    if (duplicateEntries.length > 0) {
+        resultHTML += `<div class="info">Skipped ${duplicateEntries.length} duplicate${duplicateEntries.length !== 1 ? 's' : ''} that already exist in your birthday book.</div>`;
+    }
     if (errorCount > 0) {
         resultHTML += `<div class="error">Failed to import ${errorCount} birthday${errorCount !== 1 ? 's' : ''}.</div>`;
         if (errors.length > 0) {
@@ -340,6 +368,9 @@ async function importSelected() {
     }
     
     resultDiv.innerHTML = resultHTML;
+    
+    // Refresh the table to show updated duplicate status
+    loadExistingBirthdays();
     
     // Clear selections
     selectedRows.clear();

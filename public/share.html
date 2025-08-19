@@ -116,27 +116,27 @@
             <p>This sharing link has expired or is no longer valid.</p>
         </div>
 
-        <form id="birthdayForm" style="display: none;">
+        <form id="birthdayForm" style="display: none;" onsubmit="handleBirthdaySubmit(event)">
             <div class="form-group">
                 <label for="name">Your Name:</label>
-                <input type="text" id="name" required placeholder="Enter your full name">
+                <input type="text" id="name" name="name" required placeholder="Enter your full name">
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="day">Day:</label>
-                    <select id="day" required>
+                    <select id="day" name="day" required>
                         <option value="">Select Day</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="month">Month:</label>
-                    <select id="month" required>
+                    <select id="month" name="month" required>
                         <option value="">Select Month</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="year">Year (Optional):</label>
-                    <input type="number" id="year" min="1900" max="2100" placeholder="YYYY">
+                    <input type="number" id="year" name="year" min="1900" max="2100" placeholder="YYYY">
                 </div>
             </div>
             <button type="submit">Add My Birthday</button>
@@ -246,12 +246,15 @@
                     })
                 });
                 
+                const data = await response.json();
+                
                 if (!response.ok) {
-                    const data = await response.json();
                     throw new Error(data.error || 'Failed to add birthday');
                 }
                 
+                // Check if this was a duplicate
                 showSuccess('Birthday added successfully! Thank you for sharing your birthday!');
+                
                 document.getElementById('birthdayForm').reset();
                 
             } catch (error) {
@@ -287,9 +290,6 @@
             
             initializeForm();
             loadSharingLink();
-            
-            // Handle form submission
-            document.getElementById('birthdayForm').addEventListener('submit', handleBirthdaySubmit);
         });
     </script>
 </body>
