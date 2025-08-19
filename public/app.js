@@ -6,7 +6,10 @@ const VERIFY_CODE_URL = `${API_BASE}/auth/verify`;
 // Store email for verification step
 let currentEmail = '';
 
-async function requestCode() {
+async function requestCode(event) {
+    // Prevent default form submission
+    event.preventDefault();
+    
     const emailInput = document.getElementById('email');
     const errorDiv = document.getElementById('emailError');
     const successDiv = document.getElementById('emailSuccess');
@@ -50,7 +53,10 @@ async function requestCode() {
     }
 }
 
-async function verifyCode() {
+async function verifyCode(event) {
+    // Prevent default form submission
+    event.preventDefault();
+    
     const codeInput = document.getElementById('code');
     const errorDiv = document.getElementById('verificationError');
     

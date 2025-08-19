@@ -48,9 +48,6 @@ function initializeForm() {
         option.textContent = month;
         monthSelect.appendChild(option);
     });
-    
-    // Handle form submission
-    document.getElementById('birthdayForm').addEventListener('submit', handleBirthdaySubmit);
 }
 
 async function handleBirthdaySubmit(event) {
@@ -63,6 +60,20 @@ async function handleBirthdaySubmit(event) {
     
     if (!name || !day || !month) {
         showFormError('Please fill in all required fields');
+        return;
+    }
+    
+    // Check for duplicates in existing birthdays
+    const isDuplicate = allBirthdays.some(birthday => 
+        birthday.name.toLowerCase() === name.toLowerCase() &&
+        birthday.month === month &&
+        birthday.day === day
+    );
+    
+    if (isDuplicate) {
+        // Show success message for duplicate (as if it was added)
+        showFormSuccess('Birthday already exists in your list!');
+        document.getElementById('birthdayForm').reset();
         return;
     }
     
@@ -194,9 +205,14 @@ function displayBirthdays(birthdays) {
                 ? 'Tomorrow!' 
                 : `in ${birthday.daysUntilNextBirthday} days`;
         
+        // Determine if this is today's birthday and apply special styling
+        const isToday = birthday.isToday;
+        const itemClass = isToday ? 'birthday-item birthday-today' : 'birthday-item';
+        
         return `
-            <div class="birthday-item" id="birthday-${birthday.id}">
+            <div class="${itemClass}" id="birthday-${birthday.id}">
                 <div class="birthday-info">
+                    ${isToday ? '<div class="today-badge">🎉 TODAY! 🎉</div>' : ''}
                     <div class="birthday-name">${birthday.name}</div>
                     <div class="birthday-date">${monthName} ${birthday.day}${yearText}</div>
                     <div class="birthday-countdown">${daysText}</div>
@@ -513,6 +529,52 @@ async function deleteSharingLink(id) {
         
     } catch (error) {
         showSharingError(error.message);
+    }
+}
+
+function exportBirthdays() {
+    const exportBtn = document.getElementById('exportBtn');
+    exportBtn.disabled = true;
+    exportBtn.textContent = 'Exporting...';
+    
+    try {
+        // Create CSV content with header
+        const csvHeader = '"Name","Year","Month","Day","Link to Profile"\n';
+        const csvRows = allBirthdays.map(birthday => {
+            const name = `"${birthday.name}"`;
+            const year = birthday.year || '';
+            const month = birthday.month;
+            const day = birthday.day;
+            const profileLink = ''; // Empty for now, can be extended later
+            
+            return `${name},"${year}","${month}","${day}","${profileLink}"`;
+        }).join('\n');
+        
+        const csvContent = csvHeader + csvRows;
+        
+        // Create and download the file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'birthdays.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Show success message
+        showFormSuccess('Birthdays exported successfully!');
+        
+    } catch (error) {
+        console.error('Error exporting birthdays:', error);
+        showFormError('Failed to export birthdays. Please try again.');
+    } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = 'Export to CSV';
     }
 }
 

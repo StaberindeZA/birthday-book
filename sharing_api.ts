@@ -94,6 +94,27 @@ export function createSharingRouter(db: DatabaseSync): Router {
       return jsonError(ctx, 404, "Sharing link not found or expired");
     }
     
+    // Check for duplicates before adding
+    const existingBirthday = db.prepare(
+      "SELECT * FROM birthday WHERE accountId = ? AND LOWER(name) = LOWER(?) AND month = ? AND day = ?"
+    ).get(link.accountId, name, month, day);
+    
+    if (existingBirthday) {
+      // Return same response format for duplicate (as if it was added)
+      ctx.response.status = 201;
+      ctx.response.body = { 
+        id: existingBirthday.id, 
+        accountId: link.accountId, 
+        name: existingBirthday.name, 
+        day: existingBirthday.day, 
+        month: existingBirthday.month, 
+        year: existingBirthday.year, 
+        createdAt: existingBirthday.createdAt, 
+        updatedAt: existingBirthday.updatedAt
+      };
+      return;
+    }
+    
     // Add birthday to the account
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
@@ -110,7 +131,7 @@ export function createSharingRouter(db: DatabaseSync): Router {
       month, 
       year, 
       createdAt: now, 
-      updatedAt: now 
+      updatedAt: now
     };
   });
 

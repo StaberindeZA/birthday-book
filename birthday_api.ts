@@ -9,6 +9,11 @@ function getDaysUntilNextBirthday(month: number, day: number): number {
   // Create date for this year's birthday
   const thisYearBirthday = new Date(currentYear, month - 1, day);
   
+  // Check if it's today's birthday first
+  if (today.getMonth() === month - 1 && today.getDate() === day) {
+    return 0; // It's today!
+  }
+  
   // If birthday has passed this year, use next year's date
   if (thisYearBirthday < today) {
     thisYearBirthday.setFullYear(currentYear + 1);
@@ -37,14 +42,26 @@ export function createBirthdayRouter(db: DatabaseSync): Router {
     const accountId = ctx.state.accountId;
     const birthdays = db.prepare("SELECT * FROM birthday WHERE accountId = ?").all(accountId);
     
-    // Add days until next birthday to each birthday
-    const birthdaysWithDays = birthdays.map((birthday: any) => ({
-      ...birthday,
-      daysUntilNextBirthday: getDaysUntilNextBirthday(birthday.month, birthday.day)
-    }));
+    // Add days until next birthday and isToday flag to each birthday
+    const birthdaysWithDays = birthdays.map((birthday: any) => {
+      const daysUntil = getDaysUntilNextBirthday(birthday.month, birthday.day);
+      const isToday = daysUntil === 0;
+      return {
+        ...birthday,
+        daysUntilNextBirthday: daysUntil,
+        isToday: isToday
+      };
+    });
     
-    // Sort by days until next birthday
-    birthdaysWithDays.sort((a: any, b: any) => a.daysUntilNextBirthday - b.daysUntilNextBirthday);
+    // Sort by priority: today's birthdays first, then by days until next birthday
+    birthdaysWithDays.sort((a: any, b: any) => {
+      // Today's birthdays always come first
+      if (a.isToday && !b.isToday) return -1;
+      if (!a.isToday && b.isToday) return 1;
+      
+      // For non-today birthdays, sort by days until next birthday
+      return a.daysUntilNextBirthday - b.daysUntilNextBirthday;
+    });
     
     ctx.response.body = birthdaysWithDays;
   });
